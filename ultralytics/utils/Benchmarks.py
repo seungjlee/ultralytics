@@ -12,6 +12,9 @@ import numpy as np
 import torch.cuda
 import yaml
 
+import ultralytics
+import ultralytics.engine.exporter
+
 from ultralytics import YOLO, YOLOWorld
 from ultralytics.cfg import TASK2DATA, TASK2METRIC
 from ultralytics.utils import ARM64, ASSETS, LINUX, LOGGER, MACOS, TQDM, WEIGHTS_DIR
@@ -20,10 +23,47 @@ from ultralytics.utils.downloads import safe_download
 from ultralytics.utils.files import file_size
 from ultralytics.utils.torch_utils import get_cpu_info, select_device
 
+def export_formats_():
+    x = [
+        ["PyTorch", "-", ".pt", True, True, []],
+        ["TorchScript", "torchscript", ".torchscript", True, True, ["batch", "optimize", "half", "nms"]],
+        ["ONNX", "onnx", ".onnx", True, True, ["batch", "dynamic", "half", "opset", "simplify", "nms"]],
+        [
+            "OpenVINO",
+            "openvino",
+            "_openvino_model",
+            True,
+            False,
+            ["batch", "dynamic", "half", "int8", "nms", "fraction"],
+        ],
+        [
+            "TensorRT",
+            "engine",
+            ".engine",
+            False,
+            True,
+            ["batch", "dynamic", "half", "int8", "simplify", "nms", "fraction"],
+        ],
+        ["CoreML", "coreml", ".mlpackage", True, False, ["batch", "half", "int8", "nms"]],
+        ["TensorFlow SavedModel", "saved_model", "_saved_model", True, True, ["batch", "int8", "keras", "nms"]],
+        ["TensorFlow GraphDef", "pb", ".pb", True, True, ["batch"]],
+        ["TensorFlow Lite", "tflite", ".tflite", True, False, ["batch", "half", "int8", "nms", "fraction"]],
+        ["TensorFlow Edge TPU", "edgetpu", "_edgetpu.tflite", True, False, []],
+        ["TensorFlow.js", "tfjs", "_web_model", True, False, ["batch", "half", "int8", "nms"]],
+        ["PaddlePaddle", "paddle", "_paddle_model", True, True, ["batch"]],
+        ["MNN", "mnn", ".mnn", True, True, ["batch", "half", "int8"]],
+        ["NCNN", "ncnn", "_ncnn_model", True, True, ["batch", "half"]],
+        ["IMX", "imx", "_imx_model", True, True, ["int8", "fraction"]],
+        ["RKNN", "rknn", "_rknn_model", False, False, ["batch", "name"]],
+    ]
+    return dict(zip(["Format", "Argument", "Suffix", "CPU", "GPU", "Arguments"], zip(*x)))
+
+ultralytics.engine.exporter.export_formats = export_formats_
+
 def export_formats():
     x = [
         ["PyTorch", "-", ".pt", True, True, []],
-        ["TorchScript", "torchscript", ".torchscript", True, True, ["batch", "optimize", "nms"]],
+        ["TorchScript", "torchscript", ".torchscript", True, True, ["batch", "optimize", "half", "nms"]],
         ["ONNX", "onnx", ".onnx", True, True, ["batch", "dynamic", "half", "opset", "simplify", "nms"]],
         [
             "TensorRT",

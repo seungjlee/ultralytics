@@ -728,6 +728,6 @@ class ProfileModels:
             LOGGER.info(row)
 
 # %%
-benchmark("yolov10n.pt", imgsz=1280, half=True, device="cuda:1")
+benchmark("yolov10n.pt", imgsz=1280, half=True, device="cuda")
 
 # %%

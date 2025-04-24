@@ -1,4 +1,7 @@
 #!/usr/bin/python3
+#pylint: disable=missing-module-docstring,missing-function-docstring,too-many-branches
+#pylint: disable=too-many-locals,too-many-statements,line-too-long,import-outside-toplevel
+#pylint: disable=expression-not-assigned,logging-fstring-interpolation
 # %%
 import glob
 import os
@@ -201,8 +204,9 @@ def benchmark(
                 data=data, batch=1, imgsz=imgsz, plots=False, device=device, half=half, int8=int8, verbose=False
             )
             metric, speed = results.results_dict[key], results.speed["inference"]
-            fps = round(1000 / (speed + eps), 2)  # frames per second
-            y.append([name, "✅", round(file_size(filename), 1), round(metric, 4), round(speed, 2), fps])
+            fps = round(1000 / (speed + eps), 3)  # frames per second
+            GBps = round(imgsz**2 * fps * 1e-9, 4)  # GB/s
+            y.append([name, "✅", round(file_size(filename), 1), round(metric, 4), round(speed, 2), fps, GBps])
         except Exception as e:
             if verbose:
                 assert type(e) is AssertionError, f"Benchmark failure for {name}: {e}"
@@ -211,7 +215,7 @@ def benchmark(
 
     # Print results
     check_yolo(device=device)  # print system info
-    df = pd.DataFrame(y, columns=["Format", "Status❔", "Size (MB)", key, "Inference time (ms/im)", "FPS"])
+    df = pd.DataFrame(y, columns=["Format", "Status❔", "Size (MB)", key, "Inference time (ms/im)", "FPS", "GB/s"])
 
     name = model.model_name
     dt = time.time() - t0
@@ -296,7 +300,7 @@ class RF100Benchmark:
         with open(ds_link_txt, encoding="utf-8") as file:
             for line in file:
                 try:
-                    _, url, workspace, project, version = re.split("/+", line.strip())
+                    _, _, workspace, project, version = re.split("/+", line.strip())
                     self.ds_names.append(project)
                     proj_version = f"{project}-{version}"
                     if not Path(proj_version).exists():
@@ -304,7 +308,7 @@ class RF100Benchmark:
                     else:
                         LOGGER.info("Dataset already downloaded.")
                     self.ds_cfg_list.append(Path.cwd() / proj_version / "data.yaml")
-                except Exception:
+                except Exception: # pylint: disable=broad-except
                     continue
 
         return self.ds_names, self.ds_cfg_list
@@ -529,7 +533,7 @@ class ProfileModels:
         return [Path(file) for file in sorted(files)]
 
     @staticmethod
-    def get_onnx_model_info(onnx_file: str):
+    def get_onnx_model_info(onnx_file: str): # pylint: disable=unused-argument
         """Extracts metadata from an ONNX model file including parameters, GFLOPs, and input shape."""
         return 0.0, 0.0, 0.0, 0.0  # return (num_layers, num_params, num_gradients, num_flops)
 
@@ -672,7 +676,7 @@ class ProfileModels:
         Returns:
             (str): Formatted table row string with model metrics.
         """
-        layers, params, gradients, flops = model_info
+        layers, params, gradients, flops = model_info # pylint: disable=unused-variable
         return (
             f"| {model_name:18s} | {self.imgsz} | - | {t_onnx[0]:.1f}±{t_onnx[1]:.1f} ms | {t_engine[0]:.1f}±"
             f"{t_engine[1]:.1f} ms | {params / 1e6:.1f} | {flops:.1f} |"
@@ -692,7 +696,7 @@ class ProfileModels:
         Returns:
             (dict): Dictionary containing profiling results.
         """
-        layers, params, gradients, flops = model_info
+        layers, params, gradients, flops = model_info # pylint: disable=unused-variable
         return {
             "model/name": model_name,
             "model/parameters": params,

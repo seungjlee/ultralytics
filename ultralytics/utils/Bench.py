@@ -89,6 +89,7 @@ def benchmark(
     verbose=False,
     eps=1e-3,
     format="",
+    batch_size=1,
 ):
     """
     Benchmark a YOLO model across different formats for speed and accuracy.
@@ -201,7 +202,7 @@ def benchmark(
 
             # Validate
             results = exported_model.val(
-                data=data, batch=1, imgsz=imgsz, plots=False, device=device, half=half, int8=int8, verbose=False
+                data=data, batch=batch_size, imgsz=imgsz, plots=False, device=device, half=half, int8=int8, verbose=False
             )
             metric, speed = results.results_dict[key], results.speed["inference"]
             fps = round(1000 / (speed + eps), 3)  # frames per second
